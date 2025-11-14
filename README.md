@@ -7,15 +7,15 @@ Automatically loads kernel exploit, elf_loader, your elf payloads, and Lua scrip
 Supports PS5 firmwares up to 10.01
 
 ## How to use
-* Create a directory named `ps5_lua_loader`.
+* Create a directory named `ps5_autoloader`.
 * Inside this directory, place your .elf/.bin/.lua files, and an `autoload.txt` file.
     * In autoload.txt, list the files you want to load (one per line).
     * Filenames are case-sensitive - make sure the names exactly match your files.
     * You can add lines like `!1000` to make the loader wait 1000ms before sending the next payload.
     * Note: Do not put kernel exploit (e.g. `umtx.lua`) or elfloader in `autoload.txt`, as they are loaded automatically.
-* Put the `ps5_lua_loader` directory in one of these locations:
+* Put the `ps5_autoloader` directory in one of these locations:
     * In the root of a USB drive
-    * In the internal drive at `/data/ps5_lua_loader`
+    * In the internal drive at `/data/ps5_autoloader`
     * In the game’s savedata folder
 * Import savedata to your game:  
   Follow the steps in [SETUP.md](SETUP.md) to prepare and import the savedata for your Lua-compatible game.

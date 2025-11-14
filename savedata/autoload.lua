@@ -5,7 +5,8 @@
 
 autoload = {}
 autoload.options = {
-    autoload_dirname = "ps5_lua_loader", -- directory where the elfs, lua scripts and autoload.txt are located
+    autoload_dirname = "ps5_autoloader",
+    autoload_dirname_alt = "ps5_lua_loader", -- old directory name for backward compatibility
     autoload_config = "autoload.txt",
 }
 
@@ -143,9 +144,12 @@ function main()
     local possible_paths = {}
     for usb = 0, 7 do
         table.insert(possible_paths, string.format("/mnt/usb%d/%s/", usb, autoload.options.autoload_dirname))
+        table.insert(possible_paths, string.format("/mnt/usb%d/%s/", usb, autoload.options.autoload_dirname_alt))
     end
     table.insert(possible_paths, string.format("/data/%s/", autoload.options.autoload_dirname))
+    table.insert(possible_paths, string.format("/data/%s/", autoload.options.autoload_dirname_alt))
     table.insert(possible_paths, get_savedata_path() .. autoload.options.autoload_dirname .. "/")
+    table.insert(possible_paths, get_savedata_path() .. autoload.options.autoload_dirname_alt .. "/")
 
     local existing_path = nil
     for _, path in ipairs(possible_paths) do
@@ -203,9 +207,9 @@ function main()
 
         elseif config_line:sub(-4) == ".lua" then
             -- error if umtx.lua is in autoload.txt
-            if config_line == "umtx.lua" then
-                print("[ERROR] Remove umtx.lua from autoload.txt")
-                send_ps_notification("[ERROR] Remove umtx.lua from autoload.txt")
+            if config_line == "umtx.lua" or config_line == "lapse.lua" then
+                print("[ERROR] Remove kernel exploit from autoload.txt:\n" .. config_line)
+                send_ps_notification("[ERROR] Remove kernel exploit from autoload.txt:\n" .. config_line)
                 return
             end
             local full_path = existing_path .. config_line
