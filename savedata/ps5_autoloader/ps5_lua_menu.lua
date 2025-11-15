@@ -1,6 +1,5 @@
 
-menu_version = "0.1"
-
+menu_version = "0.2"
 if not is_jailbroken() then
     send_ps_notification("This script requires a jailbroken PS5.\nRun kernel exploit (e.g. umtx.lua) first")
     return
@@ -160,6 +159,53 @@ local HTML_CONTENT = [[
             padding: 0;
         }
 
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            z-index: 1020;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background-color: #333333;
+            padding: 20px;
+            border-radius: 8px;
+            color: #e0e0e0;
+            max-width: 90%;
+            width: 500px;
+            text-align: center;
+        }
+        .modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .modal-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 0;
+            padding: 0;
+        }
+        .confirm-btn {
+            background-color: #d32f2f;
+            color: white;
+            font-size: 24px; 
+            padding: 10px 20px;
+        }
+        .cancel-btn {
+            background-color: #546e7a;
+            color: white;
+            font-size: 24px; padding: 10px 20px;
+        }
+
         .payloads-section {
             width: 100%;
             max-width: 1200px;
@@ -220,18 +266,20 @@ local HTML_CONTENT = [[
             z-index: 1000;
             overflow: auto;
             color: white;
-            padding: 40px 20px;
+            padding: 10px;
             box-sizing: border-box;
             transition: opacity 0.5s ease, left 0.5s ease;
-        }
-
-        .overlay-content {
-            max-width: 1100px;
-            margin: 0 auto;
             text-align: center;
         }
 
-        .info-section h3 {
+        .overlay-content {
+            max-width: 1300px;
+            margin: 0 auto;
+            text-align: center;
+            display: flex;
+        }
+
+        .box h3 {
             margin-top: 0;
             color: #1f83ff;
         }
@@ -259,6 +307,7 @@ local HTML_CONTENT = [[
             cursor: pointer;
             border-radius: 5px;
             margin-top: 20px;
+            margin-bottom: 0;
         }
 
         .close-button:hover {
@@ -269,16 +318,20 @@ local HTML_CONTENT = [[
             justify-content: center;
             margin: 20px 0;
         }
-        
-        .info-section {
+
+        .box {
             text-align: left;
-            margin: 20px 0;
+            margin: 20px;
             padding: 16px 48px;
             background-color: #292b2e;
             border-radius: 5px;
         }
+
+        .box-delete-list {
+          background-color: #320f0f;
+        }
         
-        .info-section h3 {
+        .box h3 {
             margin-top: 0;
             color: #fff;
         }
@@ -286,6 +339,91 @@ local HTML_CONTENT = [[
         .error-message {
             color: #ff5555;
             font-weight: bold;
+        }
+        .browse-modal-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-height: 438px;
+            min-width: 500px;
+        }
+        .browse-modal-item {
+            padding: 8px;
+            display: inline-block;
+        }
+        .browse-modal-item p {
+            margin: 5px 0;
+            text-align: left;
+        }
+        .browse-modal-download {
+            background-color: #4b4f50;
+            color: #fff;
+            font-size: 22px;
+            border: none;
+            padding: 12px 18px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+        .browse-modal-download:hover {
+            background-color: #3e4344;
+        }
+
+        .browse-modal-download.delete-btn {
+            background-color: #560d0d;
+        }
+
+        .browse-modal-download.delete-btn:hover {
+            background-color: #761515;
+        }
+
+        .browse-payload-description {
+            font-size: 18px;
+            color: #ccc;
+            margin: 0;
+        }
+        .browse-payload-description a {
+            color: #6a8fa7;
+            text-decoration: underline;
+        }
+        .browse-error-message {
+            color: #fff;
+            background-color: #bf1515;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            display: none;
+        }
+        .download-spinner {
+            border: 3px solid #fff;
+            border-top: 3px solid transparent;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 0.6s linear infinite;
+            margin-left: 5px;
+            display: none;
+        }
+        .payload-details-popup {
+            display: none;
+            position: absolute;
+            bottom: 50%;
+            left: 100%;
+            transform: translateY(50%);
+            background-color: #363636;
+            color: #aaa;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+            z-index: 10;
+            width: 400px;
+            margin-left: 10px;
+            margin-bottom: 5px;
+            font-size: 24px;
+        }
+        .browse-modal-download:hover + .payload-details-popup {
+            display: block;
         }
 
         /* Two-column layout for QR and description */
@@ -366,28 +504,46 @@ local HTML_CONTENT = [[
 
 <div id="payloadOverlay" class="overlay">
     <div class="overlay-content">
-        <div class="info-section">
-            <h3>Manage Payloads</h3>
-            <div class="two-column-layout">
-                <div class="description-column">
-                    <p id="ipAddressInfo">Loading IP address information...</p>
+        <div style="display: inline-block;">
+            <div class="box">
+                <h3>Download Payloads</h3>
+                <div id="browseContainer">
+                    <div id="browseLoadingSpinner" class="loading-spinner" style="margin: 20px auto; display: none;"></div>
+                    <p id="browseErrorMessage" class="error-message" style="display: none;"></p>
+                    <ul id="browseModalList" class="browse-modal-list"></ul>
                 </div>
-                <div class="qr-column">
-                    <div id="qrCode"></div>
+            </div>
+            <div class="box box-delete-list">
+                <h3>Remove Payloads</h3>
+                <div id="removeContainer">
+                    <p id="deleteErrorMessage" class="error-message" style="display: none;"></p>
+                    <ul id="deleteModalList"></ul>
                 </div>
             </div>
         </div>
-                
-        <div class="info-section">
-            <p>You can also manually add payloads by placing .elf/.bin/.lua files in these locations:</p>
-            <ul>
-                <li>Internal storage: <code>/data/ps5_lua_loader</code></li>
-                <li>USB storage: <code>USB/ps5_lua_loader/</code></li>
-            </ul>
+        <div style="display: inline-block;">
+            <div class="box">
+                <h3>Remote Manager</h3>
+                <div class="two-column-layout">
+                    <div class="description-column">
+                        <p id="ipAddressInfo">Loading IP address information...</p>
+                    </div>
+                    <div class="qr-column">
+                        <div id="qrCode"></div>
+                    </div>
+                </div>
+            </div>
+                    
+            <div class="box">
+                <p>You can also manually add payloads by placing .elf/.bin/.lua files in these locations:</p>
+                <ul>
+                    <li>Internal storage: <code>/data/ps5_lua_loader/</code></li>
+                    <li>USB storage: <code>USB/ps5_lua_loader/</code></li>
+                </ul>
+            </div>
         </div>
-        
-        <button id="closeOverlay" class="close-button">Continue</button>
     </div>
+    <button id="closeOverlay" class="close-button">Continue</button>
 </div>
     
 <div id="main">
@@ -410,6 +566,26 @@ local HTML_CONTENT = [[
     </div>
 </div>
 
+<div id="deleteModal" class="modal">
+    <div class="modal-content">
+        <h3 style="margin-top: 0;">Confirm Deletion</h3>
+        <p>Are you sure you want to delete <strong id="fileToDelete" style="color: #ffcdd2;"></strong>?</p>
+        <div class="modal-buttons">
+            <button id="cancelDelete" class="modal-btn cancel-btn">Cancel</button>
+            <button id="confirmDelete" class="modal-btn confirm-btn">Delete</button>
+        </div>
+    </div>
+</div>
+
+<div id="messageModal" class="modal">
+    <div class="modal-content">
+        <h3 id="messageModalTitle" style="margin-top: 0; color: #ff5555;"></h3>
+        <p id="messageModalText"></p>
+        <div class="modal-buttons">
+            <button id="messageModalClose" class="modal-btn" style="background-color: #4e79ae; color: white; font-size: 24px; padding: 10px 20px;">Close</button>
+        </div>
+    </div>
+</div>
 
 <div id="busy">
     <div class="loading-spinner" style="margin: auto; display: block; margin-top: calc(50vh - 133px);"></div>
@@ -423,12 +599,41 @@ local HTML_CONTENT = [[
         let isLogHidden = false;
         let autoScrollEnabled = true;
         let lastLogCount = 0;
+        const payloadsUrl = 'https://itsplk.github.io/ps5_payloads/ps5_payloads.json';
+
+        const browseModalList = document.getElementById('browseModalList');
+        const browseLoadingSpinner = document.getElementById('browseLoadingSpinner');
+        const browseErrorMessage = document.getElementById('browseErrorMessage');
+
+        const messageModal = document.getElementById('messageModal');
+        const messageModalTitle = document.getElementById('messageModalTitle');
+        const messageModalText = document.getElementById('messageModalText');
+        const messageModalClose = document.getElementById('messageModalClose');
+        const deleteModal = document.getElementById('deleteModal');
+        const fileToDelete = document.getElementById('fileToDelete');
+        const confirmDelete = document.getElementById('confirmDelete');
+        const cancelDelete = document.getElementById('cancelDelete');
+
+        let fileToDeletePath = '';
+
+        let dataPayloads = [];
 
         // Fetch payloads and create buttons
         function fetchPayloads() {
             fetch('/list_payloads')
                 .then(response => response.json())
                 .then(data => {
+
+                    dataPayloads = [];
+                    data.payloads.forEach(path => {
+                        if (path.startsWith('/data/')) {
+                            const fileName = path.split('/').pop();
+                            dataPayloads.push(fileName);
+                        }
+                    });
+
+                    displayBrowseList(availablePayloads);
+
                     const payloadsContainer = document.getElementById('payloads-container');
                     payloadsContainer.innerHTML = ''; // Clear loading message
                     
@@ -482,7 +687,11 @@ local HTML_CONTENT = [[
                         });
                     } else {
                         payloadsContainer.innerHTML = '<div style="text-align: center; padding: 20px;">No payloads found</div>';
+                        setTimeout(() => {
+                            manageBtn.click();
+                        }, 500);
                     }
+                    updateDeleteList();
                 })
                 .catch(error => {
                     console.error('Error fetching payloads:', error);
@@ -511,6 +720,32 @@ local HTML_CONTENT = [[
                     buttonElement.classList.remove("active");
                     document.getElementById("busy").classList.add("hidden");
                 });
+        }
+
+        // Function to upload a file (needed for browse functionality)
+        function uploadFile(file) {
+            document.getElementById("busy").classList.remove("hidden");
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            fetch(`/manage:upload?filename=${encodeURIComponent(file.name)}`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.text().then(text => {
+                if (!response.ok) { throw new Error(text || `Upload failed with status: ${response.status}`); }
+                if (text.startsWith('Error:')) { throw new Error(text); }
+                return text;
+            }))
+            .then(successText => {
+                console.log(`${file.name} has been added successfully.`);
+                fetchPayloads(); // Refresh the list
+            })
+            .catch(error => {
+                showMessage('Error Adding Payload', error.message);
+            })
+            .finally(() => { document.getElementById("busy").classList.add("hidden"); });
         }
 
         function toggleFullscreenLog() {
@@ -611,6 +846,7 @@ local HTML_CONTENT = [[
                 main.style.display = "none";
             }, 500);
             getIPAddress();
+            fetchBrowsePayloads();
         }
 
         // Close overlay when button is clicked
@@ -668,6 +904,199 @@ local HTML_CONTENT = [[
                     console.error('Error fetching IP address:', error);
                     document.getElementById('ipAddressInfo').innerHTML = 
                         '<span class="error-message">Failed to retrieve IP address information. Please try again later.</span>';
+                });
+        }
+
+        function showMessage(title, message) {
+            messageModalTitle.textContent = title;
+            messageModalText.textContent = message;
+            messageModal.style.display = 'flex';
+        }
+
+        function hideMessage() {
+            messageModal.style.display = 'none';
+        }
+
+        messageModalClose.addEventListener('click', hideMessage);
+        messageModal.addEventListener('click', function(event) {
+            if (event.target === messageModal) hideMessage();
+        });
+
+        let availablePayloads = [];
+
+        function fetchBrowsePayloads() {
+            browseModalList.innerHTML = '';
+            browseErrorMessage.style.display = 'none';
+            browseLoadingSpinner.style.display = 'block';
+            fetch(payloadsUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(payloads => {
+                    availablePayloads = payloads;
+                    browseLoadingSpinner.style.display = 'none';
+                    displayBrowseList(availablePayloads);
+                })
+                .catch(error => {
+                    browseLoadingSpinner.style.display = 'none';
+                    browseErrorMessage.textContent = `Error loading payloads: ${error.message}`;
+                    browseErrorMessage.style.display = 'block';
+                });
+        }
+
+        function displayBrowseList(payloads) {
+            browseModalList.innerHTML = '';
+            payloads.forEach(payload => {
+
+                // check if payload is already there (use this split('/').pop();)
+                if (dataPayloads.includes(payload.filename)) {
+                    return;
+                }
+
+                const payloadDiv = document.createElement('div');
+                payloadDiv.className = 'browse-modal-item';
+                let name = payload.filename;
+                if (name.toLowerCase().endsWith('.bin') || name.toLowerCase().endsWith('.elf')) {
+                    name = name.slice(0, name.lastIndexOf('.'));
+                    name = name.replace(/_/g, ' ');
+                }
+                payloadDiv.innerHTML = `
+                    <div style="position: relative;">
+                        <button class="browse-modal-download" data-url="${payload.url}" data-filename="${payload.filename}">${name} <span class="download-spinner"></span></button>
+                        <div class="payload-details-popup">
+                            <p class="browse-payload-description">${payload.description}</p>
+                            <p class="browse-payload-description"><strong>Last Update:</strong> ${payload.last_update}</p>
+                            <p class="browse-payload-description"><strong>Source:</strong> ${payload.source}</p>
+                        </div>
+                        <p class="browse-error-message"></p>
+                    </div>
+                `;
+                browseModalList.appendChild(payloadDiv);
+            });
+        }
+
+        function updateDeleteList() {
+            const deleteListContainer = document.getElementById('deleteModalList');
+            const deleteErrorMessage = document.getElementById('deleteErrorMessage');
+            const deleteBox = document.querySelector('.box-delete-list');
+
+            deleteListContainer.innerHTML = '';
+            deleteErrorMessage.style.display = 'none';
+
+            // use dataPayloads instead fetching again
+            if (dataPayloads.length > 0) {
+                deleteBox.style.display = 'block';
+
+                dataPayloads.forEach(fileName => {
+                    // Create a list item for each payload to delete
+                    const listItem = document.createElement('li');
+                    listItem.className = 'browse-modal-item';
+                    let name = fileName;
+                    if (name.toLowerCase().endsWith('.bin') || name.toLowerCase().endsWith('.elf')) {
+                        name = name.slice(0, name.lastIndexOf('.'));
+                        name = name.replace(/_/g, ' ');
+                    }
+                    listItem.innerHTML = `
+                        <div style="position: relative;">
+                            <button class="browse-modal-download delete-btn" data-filename="${fileName}">${name}</button>
+                            <p class="browse-error-message"></p>
+                        </div>
+                    `;
+                    deleteListContainer.appendChild(listItem);
+                });
+                return;
+            } else {
+                deleteBox.style.display = 'none';
+
+                deleteErrorMessage.textContent = 'No payloads available to remove.';
+                deleteErrorMessage.style.display = 'block';
+            }
+        }
+
+        browseModalList.addEventListener('click', function(event) {
+            const button = event.target.closest('.browse-modal-download');
+            if (button) {
+                const url = button.dataset.url;
+                const filename = button.dataset.filename;
+                const spinner = button.querySelector('.download-spinner');
+                spinner.style.display = 'inline-block';
+                button.disabled = true;
+
+                downloadAndUpload(url, filename, button, spinner);
+            }
+        });
+
+        document.getElementById('deleteModalList').addEventListener('click', function(event) {
+            const button = event.target.closest('.delete-btn');
+            if (button) {
+                const filename = button.dataset.filename;
+                showDeleteConfirmation(filename);
+            }
+        });
+
+        function showDeleteConfirmation(fileName) {
+            fileToDeletePath = fileName;
+            fileToDelete.textContent = fileName;
+            deleteModal.style.display = 'flex';
+        }
+
+
+        function downloadAndUpload(url, filename, button, spinner) {
+            // Find the list item (li) that contains the button
+            const listItem = button.closest('.browse-modal-item');
+            let errorDisplay = null;
+            if (listItem) {
+                errorDisplay = listItem.querySelector('.browse-error-message');
+            }
+            if (errorDisplay) errorDisplay.style.display = 'none';
+
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) throw new Error(`Failed to download: ${response.status}`);
+                    return response.blob();
+                })
+                .then(blob => {
+                    const file = new File([blob], filename);
+                    uploadFile(file);
+                })
+                .catch(error => {
+                    if (errorDisplay) {
+                        errorDisplay.textContent = `Error: ${error.message}`;
+                        errorDisplay.style.display = 'block';
+                    }
+                }).finally(() => {
+                    spinner.style.display = 'none';
+                    button.disabled = false; 
+            });
+        }
+
+        cancelDelete.addEventListener('click', function() {
+            deleteModal.style.display = 'none';
+            fileToDeletePath = '';
+        });
+
+        confirmDelete.addEventListener('click', function() {
+            if (fileToDeletePath) {
+                deleteFile(fileToDeletePath);
+            }
+        });
+
+        function deleteFile(fileName) {
+            deleteModal.style.display = 'none';
+            document.getElementById("busy").classList.remove("hidden");
+
+            fetch(`/manage:delete?filename=${encodeURIComponent(fileName)}`)
+                .then(response => {
+                    if (!response.ok) throw new Error('Failed to delete file');
+                    fetchPayloads(); // Refresh lists
+                })
+                .catch(error => showMessage('Error Deleting File', error.message))
+                .finally(() => {
+                    document.getElementById("busy").classList.add("hidden");
+                    fileToDeletePath = '';
                 });
         }
 
@@ -2377,6 +2806,7 @@ function http_server.handle_request(request)
             if success ~= true then
                 return message or "Error: Unknown error during file processing"
             end
+            http_server.last_keepalive = os.time()
             return "OK"
         else
             return "Error: No file content received"
