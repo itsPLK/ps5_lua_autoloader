@@ -2,7 +2,7 @@
 FORCE_LAPSE_EXPLOIT = false
 SHOW_DEBUG_NOTIFICATIONS = true
 
-LUA_LOADER_VERSION = "v0.9"
+LUA_LOADER_VERSION = "v1.0"
 
 
 options = {
@@ -405,7 +405,7 @@ function main()
 
     FW_VERSION = get_version()
 
-    send_ps_notification(string.format("PS5 Lua Loader %s \n %s %s", LUA_LOADER_VERSION, PLATFORM, FW_VERSION))
+    send_ps_notification(string.format("\n\nPS5 Lua Autoloader %s by PLK\n\n%s %s\nGame: %s\n\n", LUA_LOADER_VERSION, string.upper(PLATFORM), FW_VERSION, game_name))
 
     if PLATFORM ~= "ps5" then
         notify(string.format("This only works on ps5 (current %s %s)", PLATFORM, FW_VERSION))

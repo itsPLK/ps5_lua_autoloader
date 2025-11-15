@@ -1360,8 +1360,8 @@ function setup_kernel_rw()
         print()
         printf("== attempt #%d ==", i)
         print()
-        if SHOW_DEBUG_NOTIFICATIONS or i >= 15 then
-            send_ps_notification("umtx exploit attempt #" .. i)
+        if SHOW_DEBUG_NOTIFICATIONS and i % 5 == 0 then -- notify every 5 attempts
+            send_ps_notification("umtx: attempt #" .. i)
         end
 
         if umtx.race() then
@@ -1369,6 +1369,9 @@ function setup_kernel_rw()
             if umtx.reclaim_kernel_stack() then
                 dbgn("race won")
                 print("kstack successfully reclaimed")
+                if SHOW_DEBUG_NOTIFICATIONS then
+                    send_ps_notification("umtx: race won after " .. i .. " attempts")
+                end
                 break
             end
 
@@ -1501,9 +1504,6 @@ function run_hax()
     pin_to_core(prev_core)
     set_rtprio(prev_rtprio)
 
-    if SHOW_DEBUG_NOTIFICATIONS then
-        send_ps_notification("umtx exploit finished")
-    end
     print("done!")
 end
 

