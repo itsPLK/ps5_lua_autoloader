@@ -1,5 +1,5 @@
 
-## PS5 Lua Loader
+## PS5 Lua Autoloader
 
 Fork of [remote_lua_loader](https://github.com/shahrilnet/remote_lua_loader)
 
